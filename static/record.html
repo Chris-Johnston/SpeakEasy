@@ -21,6 +21,8 @@
     Some text goes here
 </code>
 
+<br />
+
 <button id="btnSpeak">
     Speak it to me
 </button>
@@ -52,6 +54,21 @@
             // get the content of the prompt box
             var text = document.getElementById('promptText').innerText;
             responsiveVoice.speak(text, 'US English Female', {rate:0.6});
+        }
+    );
+
+    var btn = document.getElementById("btnNewPrompt");
+    btn.addEventListener('click', function()
+        {
+            // get the content of the prompt box
+            $.ajax({
+                type: 'GET',
+                url: 'http://localhost:5000/phrases/random',
+                cache: false
+            }).done(function(data)
+            {
+                document.getElementById('promptText').innerText = data['text'];
+            });
         }
     );
 
@@ -100,7 +117,7 @@
                 contentType: false,
                 enctype: 'multipart/form-data'
             }).done(function(data) {
-                // console.log(data);
+                // todo need to implement highlighting the diff between the two
                 document.getElementById('actualText').innerText = data;
             });
 
@@ -124,47 +141,6 @@
         }
     });
 
-
-
-
-//     var player = document.getElementById('player');
-//
-//     var onSuccess = function(stream)
-//     {
-//     /**
-//         if (window.URL)
-//         {
-//             player.src = window.URL.createObjectURL(stream);
-//         }
-//         else
-//         {
-//             player.src = stream;
-//         } **/
-//
-//         const mediaRecorder = new MediaRecorder(stream);
-//         mediaRecorder.start();
-//
-//
-//         const audioChunks = [];
-//
-//     mediaRecorder.addEventListener("dataavailable", event => {
-//       audioChunks.push(event.data);
-// });
-//
-// mediaRecorder.addEventListener("stop", () => {
-//       const audioBlob = new Blob(audioChunks);
-//       const audioUrl = URL.createObjectURL(audioBlob);
-//       const audio = new Audio(audioUrl);
-// audio.play();
-// });
-//
-// setTimeout(() => {
-//       mediaRecorder.stop();
-// }, 3000);
-//     };
-//
-//     navigator.mediaDevices.getUserMedia({ audio: true, video: false })
-//       .then(onSuccess);
 </script>
 
 
