@@ -3,3 +3,4 @@ Werkzeug
 google-cloud-storage
 google-cloud-speech
 grpcio
+flask-cors

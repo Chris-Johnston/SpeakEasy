@@ -1,0 +1,173 @@
+<html>
+
+<head>
+    <script
+            src="https://code.jquery.com/jquery-3.3.1.min.js"
+            integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8="
+            crossorigin="anonymous"></script>
+</head>
+
+<body>
+
+<script src='https://code.responsivevoice.org/responsivevoice.js'></script>
+
+<h1>
+    SpeakEasy POC
+</h1>
+
+<p>Try saying the following phrase:</p>
+
+<code id="promptText">
+    Some text goes here
+</code>
+
+<button id="btnSpeak">
+    Speak it to me
+</button>
+
+<button id="btnNewPrompt">
+    New Prompt
+</button>
+
+<br />
+
+<code id="actualText">
+    ...
+</code>
+
+<br />
+
+<button id="btnStart">Start/Stop Recording</button>
+
+<script>
+    // the current recording state
+    var recording = false;
+    var mediaRecorder = null;
+    var audioChunks = [];
+
+
+    var btn = document.getElementById("btnSpeak");
+    btn.addEventListener('click', function()
+        {
+            // get the content of the prompt box
+            var text = document.getElementById('promptText').innerText;
+            responsiveVoice.speak(text, 'US English Female', {rate:0.6});
+        }
+    );
+
+    function startRecording()
+    {
+        console.log('started recording');
+        mediaRecorder = null;
+        audioChunks = [];
+
+        // start recording user data
+        navigator.mediaDevices.getUserMedia({ audio: { volume: 1.0, sampleRate: {exact: 48000}, channelCount: 1}, video: false })
+            .then(function (stream)
+            {
+                mediaRecorder = new MediaRecorder(stream, {});
+                mediaRecorder.start();
+                mediaRecorder.addEventListener("dataavailable", function (event) {
+                    audioChunks.push(event.data);
+                });
+
+            });
+    }
+
+    function stopRecording()
+    {
+        console.log('stopped recording');
+        mediaRecorder.addEventListener("stop", function () {
+
+            var audioBlob = new Blob(audioChunks, {type: 'audio/ogg; codecs=opus'});
+
+
+      var audioUrl = URL.createObjectURL(audioBlob);
+      var audio = new Audio(audioUrl);
+        //audio.play();
+
+            var fd = new FormData();
+            console.log(audioBlob);
+
+            fd.append('file', audioBlob, 'audio.ogg');
+
+            $.ajax({
+                type: 'POST',
+                url: 'http://localhost:5000/sound',
+                data: fd,
+                cache: false,
+                processData: false,
+                contentType: false,
+                enctype: 'multipart/form-data'
+            }).done(function(data) {
+                // console.log(data);
+                document.getElementById('actualText').innerText = data;
+            });
+
+        });
+
+        mediaRecorder.stop();
+    }
+
+    var btn = document.getElementById('btnStart');
+    btn.addEventListener('click', function()
+    {
+        recording = !recording;
+
+        if (recording)
+        {
+            startRecording();
+        }
+        else
+        {
+            stopRecording();
+        }
+    });
+
+
+
+
+//     var player = document.getElementById('player');
+//
+//     var onSuccess = function(stream)
+//     {
+//     /**
+//         if (window.URL)
+//         {
+//             player.src = window.URL.createObjectURL(stream);
+//         }
+//         else
+//         {
+//             player.src = stream;
+//         } **/
+//
+//         const mediaRecorder = new MediaRecorder(stream);
+//         mediaRecorder.start();
+//
+//
+//         const audioChunks = [];
+//
+//     mediaRecorder.addEventListener("dataavailable", event => {
+//       audioChunks.push(event.data);
+// });
+//
+// mediaRecorder.addEventListener("stop", () => {
+//       const audioBlob = new Blob(audioChunks);
+//       const audioUrl = URL.createObjectURL(audioBlob);
+//       const audio = new Audio(audioUrl);
+// audio.play();
+// });
+//
+// setTimeout(() => {
+//       mediaRecorder.stop();
+// }, 3000);
+//     };
+//
+//     navigator.mediaDevices.getUserMedia({ audio: true, video: false })
+//       .then(onSuccess);
+</script>
+
+
+</body>
+
+</html>
