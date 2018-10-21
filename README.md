@@ -16,3 +16,9 @@ python3.6 -m pip install -r requirements.txt
 [Files]
 tempdir=/home/chris/Git/SpeakEasy/temp
 ```
+
+# Running server
+
+```console
+export GOOGLE_APPLICATION_CREDENTIALS="/path/to/file.json" export FLASK_DEBUG=1; export FLASK_APP=main; flask run -h 0.0.0.0 -p 80
+```

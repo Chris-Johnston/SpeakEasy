@@ -1,4 +1,4 @@
-from flask import Flask, jsonify, request, flash, redirect
+from flask import Flask, jsonify, request, flash, redirect, render_template
 from werkzeug.utils import secure_filename
 import json
 import configparser
@@ -29,17 +29,9 @@ with open('config.ini') as cfg:
     config.read_string(cfg.read())
 
 
-@app.route('/tester')
-def tester():
-    return app.send_static_file('record.html')
-
-
 @app.route('/')
-def index():
-    # debugging
-    # file = config.get('Files', 'tempdir')
-    # print(file)
-    return 'Test index, please ignore'
+def tester():
+    return render_template('record.html')
 
 
 @app.route('/phrases/<int:phrase>', methods=['GET'])

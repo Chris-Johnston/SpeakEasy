@@ -63,7 +63,7 @@
             // get the content of the prompt box
             $.ajax({
                 type: 'GET',
-                url: 'http://localhost:5000/phrases/random',
+                url: '{{ url_for('get_random') }}',
                 cache: false
             }).done(function(data)
             {
@@ -110,7 +110,7 @@
 
             $.ajax({
                 type: 'POST',
-                url: 'http://localhost:5000/sound',
+                url: '{{ url_for('upload_sound') }}',
                 data: fd,
                 cache: false,
                 processData: false,
