@@ -1,25 +1,11 @@
-# SpeakEasyAPI
+# SpeakEasy
 
-This is the backing API for the SpeakEasy application, made for DubHacks 2018.
+The backing API to support the speak easy app.
 
-# Building
+# Installing
 
-This application is built with **Gradle**.
-A 'getting started' guide for Gradle can be found here:
-https://spring.io/guides/gs/gradle/
-
-You can build the application using the following command:
+Install prerequisites with:
 
 ```console
-gradle build
+python3.6 -m pip install -r requirements.txt
 ```
-
-# Running
-
-After building, run the application with:
-
-```console
-gradle run
-```
-
-Alternatively, Intellij can be used to manage building and running.
