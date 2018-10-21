@@ -1,18 +1,59 @@
+<!DOCTYPE html>
 <html>
 
 <head>
+    <meta charset="utf-8">
+    <title>SpeakEasy Demo</title>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
     <script
             src="https://code.jquery.com/jquery-3.3.1.min.js"
             integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8="
             crossorigin="anonymous"></script>
+
+
+    <style>
+        code {
+            background: white;
+            color: black;
+        }
+
+        .correct
+        {
+            background: lightgreen !important;
+            color: black;
+        }
+
+        .wrong
+        {
+            background: lightcoral !important;
+            color: black;
+        }
+    </style>
 </head>
 
 <body>
 
+<!-- Create a static nav bar at the top that has a few lins -->
+<nav class="navbar navbar-default">
+    <div class="navbar-header">
+        <!--Left side has a button which just has the name-->
+        <div class="container-fluid">
+            <a class="navbar-brand" href="#">SpeakEasy Demo</a>
+        </div>
+    </div>
+
+    <!--Right side has links and some endpoints-->
+    <ul class="nav navbar-nav navbar-right">
+        <li><a href="https://github.com/Chris-Johnston/SpeakEasyAPI">GitHub - API</a></li>
+        <li><a href="https://github.com/jinjaimie/SpeakEasyAndroid">GitHub - Android App</a></li>
+    </ul>
+
+</nav>
+
 <script src='https://code.responsivevoice.org/responsivevoice.js'></script>
 
 <h1>
-    SpeakEasy POC
+    SpeakEasy Demo
 </h1>
 
 <p>Try saying the following phrase:</p>
@@ -40,6 +81,15 @@
 <br />
 
 <button id="btnStart">Start/Stop Recording</button>
+
+<code id="statusText">
+    Status: Not Recording
+</code>
+
+
+<br />
+<i>Note: if an "enable microphone" prompt does not appear, you may have to refresh your page and try again.</i>
+<i>Due to security restrictions in Chrome, (we don't have HTTPS), this application has only been tested in Firefox.</i>
 
 <script>
     // the current recording state
@@ -75,7 +125,6 @@
     function startRecording()
     {
         console.log('started recording');
-        mediaRecorder = null;
         audioChunks = [];
 
         // start recording user data
@@ -88,56 +137,111 @@
                     audioChunks.push(event.data);
                 });
 
+                mediaRecorder.addEventListener("stop", function () {
+
+                    var audioBlob = new Blob(audioChunks, {type: 'audio/ogg; codecs=opus'});
+
+
+                    var audioUrl = URL.createObjectURL(audioBlob);
+                    var audio = new Audio(audioUrl);
+                    //audio.play();
+
+                    var fd = new FormData();
+                    console.log(audioBlob);
+
+                    fd.append('file', audioBlob, 'audio.ogg');
+
+                    $.ajax({
+                        type: 'POST',
+                        url: '{{ url_for('upload_sound') }}',
+                        data: fd,
+                        cache: false,
+                        processData: false,
+                        contentType: false,
+                        enctype: 'multipart/form-data'
+                    }).done(function(data) {
+
+
+                        document.getElementById('actualText').innerHTML = "";
+
+                        var targetwords = document.getElementById('promptText').innerText.split(" ");
+                        var actualwords = data.split(" ");
+
+                        // iterate through all of the actual words
+                        for (var i = 0; i < actualwords.length; i++)
+                        {
+                            // if beyond original len
+                            if (i >= targetwords.length)
+                            {
+                                // append a wrong span
+                                // this could be xss vulnerable, make the assumption that the results are totally safe
+                                document.getElementById('actualText').innerHTML += '<span class="wrong">' + actualwords[i] + ' </span>'
+                            }
+                            else if (actualwords[i].trim().toLowerCase() == targetwords[i].trim().toLowerCase())
+                            {
+                                document.getElementById('actualText').innerHTML += '<span class="correct">' + actualwords[i] + ' </span>'
+                            }
+                            else
+                            {
+                                document.getElementById('actualText').innerHTML += '<span class="wrong">' + actualwords[i] + ' </span>'
+                            }
+                        }
+
+                        // document.getElementById('actualText').innerText = data;
+                    });
+
+                });
+
+                if (mediaRecorder == null)
+                {
+                    console.log('didnt work');
+                }
+                else
+                {
+                    console.log('actually started');
+                    recording = true;
+                    document.getElementById('statusText').innerText = "Status: Recording";
+                }
+            })
+            .catch(function(reason)
+            {
+                console.log('error');
+                console.log(reason);
             });
     }
 
     function stopRecording()
     {
+        // if media recorder wasn't enabled, just quit
+        if (mediaRecorder == null)
+        {
+            console.log('media recorder was not set');
+            recording = false;
+            return;
+        }
+
         console.log('stopped recording');
-        mediaRecorder.addEventListener("stop", function () {
+        document.getElementById('statusText').innerText = "Status: Stopped";
 
-            var audioBlob = new Blob(audioChunks, {type: 'audio/ogg; codecs=opus'});
-
-
-      var audioUrl = URL.createObjectURL(audioBlob);
-      var audio = new Audio(audioUrl);
-        //audio.play();
-
-            var fd = new FormData();
-            console.log(audioBlob);
-
-            fd.append('file', audioBlob, 'audio.ogg');
-
-            $.ajax({
-                type: 'POST',
-                url: '{{ url_for('upload_sound') }}',
-                data: fd,
-                cache: false,
-                processData: false,
-                contentType: false,
-                enctype: 'multipart/form-data'
-            }).done(function(data) {
-                // todo need to implement highlighting the diff between the two
-                document.getElementById('actualText').innerText = data;
-            });
-
-        });
+        recording = false;
 
         mediaRecorder.stop();
+
+        mediaRecorder = null;
     }
 
     var btn = document.getElementById('btnStart');
     btn.addEventListener('click', function()
     {
-        recording = !recording;
-
-        if (recording)
+        if (!recording)
         {
             startRecording();
+            recording = true;
         }
         else
         {
             stopRecording();
+            recording = false;
         }
     });
 
