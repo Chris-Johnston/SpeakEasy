@@ -2,6 +2,8 @@
 
 The backing API to support the speak easy app.
 
+![Screenshot of landing page.](image.png)
+
 # Installing
 
 Install prerequisites with:
